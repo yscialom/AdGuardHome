@@ -21,7 +21,7 @@ LABEL\
 	org.opencontainers.image.version=$VERSION
 
 # Update certificates.
-RUN apk --no-cache add ca-certificates libcap tzdata && \
+RUN apk --no-cache add ca-certificates libcap tzdata shadow && \
 	mkdir -p /opt/adguardhome/conf /opt/adguardhome/work && \
 	chown -R nobody: /opt/adguardhome
 
@@ -54,7 +54,14 @@ EXPOSE 53/tcp 53/udp 67/udp 68/udp 80/tcp 443/tcp 443/udp 784/udp\
 
 WORKDIR /opt/adguardhome/work
 
-ENTRYPOINT ["/opt/adguardhome/AdGuardHome"]
+COPY --chown=nobody:nogroup\
+	./${DIST_DIR}/docker/entrypoint.sh\
+	/opt/adguardhome/entrypoint.sh
+
+RUN addgroup -S adguardhome
+RUN adduser -s /sbin/nologin -S -D -H -G adguardhome adguardhome
+
+ENTRYPOINT ["/opt/adguardhome/entrypoint.sh"]
 
 CMD [ \
 	"--no-check-update", \
